@@ -289,7 +289,8 @@ class TelegramBot:
         self.updater.idle()
 
 def main():
-    # دریافت تنظیمات از متغیرهای محیطی
+    # دریافت تنظیمات از متغیرهای محیطی    
+    os.environ['TELEGRAM_TOKEN'] = "8020374587:AAEwNAMmz5hK2551gxXco10R3Ccp-RetOmI"
     TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
     INSTA_USERNAME = os.getenv('INSTA_USERNAME')
     INSTA_PASSWORD = os.getenv('INSTA_PASSWORD')

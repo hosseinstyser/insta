@@ -22,52 +22,118 @@ logger = logging.getLogger(__name__)
 class InstagramDownloader:
     def __init__(self):
         self.loader = instaloader.Instaloader(
-            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-            request_timeout=60,
+            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
+            request_timeout=120,
             sleep=True,
-            max_connection_attempts=3,
-            save_metadata=False,        
+            max_connection_attempts=2,
+            save_metadata=False,
             download_comments=False,
-            compress_json=False
+            compress_json=False,
+            download_geotags=False,
+            download_video_thumbnails=False,
+            post_metadata_txt_pattern=""
         )
-        self.session = requests.Session()
-        self.headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+        
+        # تنظیمات پیشرفته session
+        self.loader.context._session.headers.update({
+            'X-IG-App-ID': '936619743392459',
+            'X-Requested-With': 'XMLHttpRequest',
             'Accept-Language': 'en-US,en;q=0.9',
-            'X-IG-App-ID': '936619743392459'
-        }
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'
+        })
+        
+        # تنظیمات requests session
+        self.session = requests.Session()
+        self.session.headers.update({
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
+            'Accept-Encoding': 'gzip, deflate',
+            'Connection': 'keep-alive'
+        })
 
     def login(self, username: str, password: str) -> bool:
-        """ورود به حساب اینستاگرام"""
+        """ورود به حساب اینستاگرام با احراز هویت دو مرحله‌ای"""
         try:
             self.loader.context.login(username, password)
-            logger.info("با موفقیت به اینستاگرام وارد شدیم")
+            # ذخیره session برای استفاده بعدی
+            self.loader.save_session_to_file()
+            logger.info("ورود به اینستاگرام موفقیت‌آمیز بود")
             return True
         except Exception as e:
-            logger.error(f"خطا در ورود به اینستاگرام: {e}")
+            logger.error(f"خطا در ورود: {str(e)}")
+            # راهکار جایگزین برای احراز هویت دو مرحله‌ای
+            if "two-factor" in str(e):
+                return self._handle_two_factor(username, password)
             return False
 
-    def sanitize_filename(self, filename: str) -> str:
-        """پاکسازی نام فایل برای ذخیره سازی"""
-        return re.sub(r'[\\/*?:"<>|]', '', filename)
+    def _handle_two_factor(self, username: str, password: str) -> bool:
+        """مدیریت احراز هویت دو مرحله‌ای"""
+        try:
+            from instaloader import TwoFactorAuthRequiredException
+            code = input("کد احراز هویت دو مرحله‌ای را وارد کنید: ")
+            self.loader.context.two_factor_login(code)
+            self.loader.save_session_to_file()
+            return True
+        except Exception as e:
+            logger.error(f"خطا در احراز دو مرحله‌ای: {str(e)}")
+            return False
 
     def download_media(self, url: str, filename: str = None) -> Optional[str]:
-        """دانلود مدیا از URL"""
+        """دانلود مدیا با مدیریت بهتر خطاها"""
         try:
-            response = self.session.get(url, headers=self.headers, stream=True, timeout=60)
-            response.raise_for_status()
+            # استفاده از session اختصاصی برای هر دانلود
+            with requests.Session() as session:
+                session.headers = self.session.headers
+                response = session.get(url, stream=True, timeout=90)
+                response.raise_for_status()
+                
+                # تعیین نام فایل
+                filename = self._generate_filename(url, filename, response)
+                
+                # ایجاد پوشه موقت
+                temp_dir = self._create_temp_dir()
+                save_path = os.path.join(temp_dir, filename)
+                
+                # دانلود با مدیریت حافظه
+                with open(save_path, 'wb') as f:
+                    for chunk in response.iter_content(chunk_size=8192):
+                        if chunk:
+                            f.write(chunk)
+                
+                logger.info(f"دانلود موفق: {save_path}")
+                return save_path
+                
+        except requests.exceptions.RequestException as e:
+            logger.error(f"خطا در دانلود مدیا: {str(e)}")
+            return None
 
-            if not filename:
-                filename = os.path.basename(urlparse(url).path)
+    def _generate_filename(self, url: str, filename: str, response) -> str:
+        """تولید نام فایل ایمن"""
+        if not filename:
+            filename = os.path.basename(urlparse(url).path.split('?')[0]
+        
+        filename = self.sanitize_filename(filename)
+        
+        # تعیین پسوند فایل
+        content_type = response.headers.get('content-type', '')
+        if not os.path.splitext(filename)[1]:
+            if 'image' in content_type:
+                filename += '.jpg'
+            elif 'video' in content_type:
+                filename += '.mp4'
+        
+        return filename
 
-            filename = self.sanitize_filename(filename)
-            
-            if not os.path.splitext(filename)[1]:
-                if 'image' in response.headers.get('content-type', ''):
-                    filename += '.jpg'
-                elif 'video' in response.headers.get('content-type', ''):
-                    filename += '.mp4'
+    def _create_temp_dir(self) -> str:
+        """ایجاد پوشه موقت با مدیریت خودکار"""
+        temp_dir = os.path.join(os.getcwd(), "temp_insta_downloads")
+        os.makedirs(temp_dir, exist_ok=True)
+        return temp_dir
 
+    def sanitize_filename(self, filename: str) -> str:
+        """پاکسازی نام فایل با الگوی پیشرفته"""
+        filename = re.sub(r'[\\/*?:"<>|]', '', filename)
+        filename = re.sub(r'\s+', '_', filename)
+        return filename[:255]  # محدودیت طول نام فایل
             # استفاده از دایرکتوری موقت سیستم
             temp_dir = os.path.join(os.getcwd(), 'temp_downloads')
             os.makedirs(temp_dir, exist_ok=True)

@@ -107,10 +107,13 @@ def download_media(self, url: str, filename: str = None) -> Optional[str]:
     except Exception as e:
         logger.error(f"خطا در دانلود مدیا: {e}")
         return None
+        class InstagramDownloader:
+    # ... (متدهای دیگر)
+
     def get_post_info(self, url: str) -> Tuple[List[Tuple[str, str, str]], str]:
-        """دریافت اطلاعات پست"""
+        """دریافت اطلاعات پست اینستاگرام"""
         try:
-            shortcode = self.get_shortcode(url)
+            shortcode = self._get_shortcode(url)
             post = instaloader.Post.from_shortcode(self.loader.context, shortcode)
             
             media_list = []
@@ -118,43 +121,32 @@ def download_media(self, url: str, filename: str = None) -> Optional[str]:
             
             if post.typename == 'GraphSidecar':
                 for idx, node in enumerate(post.get_sidecar_nodes(), start=1):
-                    if node.is_video:
-                        media_url = node.video_url
-                        media_type = 'video'
-                        ext = '.mp4'
-                    else:
-                        media_url = node.display_url
-                        media_type = 'photo'
-                        ext = '.jpg'
-                    
-                    filename = f"{post.owner_username}_post_{post.shortcode}_{idx}{ext}"
+                    media_url = node.video_url if node.is_video else node.display_url
+                    media_type = 'video' if node.is_video else 'photo'
+                    ext = '.mp4' if node.is_video else '.jpg'
+                    filename = f"{post.owner_username}_{post.shortcode}_{idx}{ext}"
                     media_list.append((media_url, media_type, filename))
             else:
-                if post.is_video:
-                    media_url = post.video_url
-                    media_type = 'video'
-                    ext = '.mp4'
-                else:
-                    media_url = post.url
-                    media_type = 'photo'
-                    ext = '.jpg'
-                
-                filename = f"{post.owner_username}_post_{post.shortcode}{ext}"
+                media_url = post.video_url if post.is_video else post.url
+                media_type = 'video' if post.is_video else 'photo'
+                ext = '.mp4' if post.is_video else '.jpg'
+                filename = f"{post.owner_username}_{post.shortcode}{ext}"
                 media_list.append((media_url, media_type, filename))
             
             return media_list, caption
+            
         except Exception as e:
             logger.error(f"خطا در دریافت اطلاعات پست: {e}")
             return [], ""
-
-    def get_shortcode(self, url: str) -> str:
+        
+    
+        def _get_shortcode(self, url: str) -> str:
         """استخراج shortcode از URL"""
         pattern = r'(?:https?://)?(?:www\.)?instagram\.com/(?:p|reel|tv)/([^/?#&]+)'
         match = re.search(pattern, url)
         if match:
             return match.group(1)
         raise ValueError("لینک اینستاگرام نامعتبر است.")
-
 class TelegramBot:
     def __init__(self, token: str, insta_downloader: InstagramDownloader):
         self.token = token

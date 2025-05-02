@@ -109,8 +109,7 @@ def download_media(self, url: str, filename: str = None) -> Optional[str]:
         return None
         class InstagramDownloader:
     # ... (متدهای دیگر)
-
-    def get_post_info(self, url: str) -> Tuple[List[Tuple[str, str, str]], str]:
+def get_post_info(self, url: str) -> Tuple[List[Tuple[str, str, str]], str]:
     """دریافت اطلاعات پست اینستاگرام"""
     try:
         shortcode = self._get_shortcode(url)
@@ -138,7 +137,6 @@ def download_media(self, url: str, filename: str = None) -> Optional[str]:
         logger.error(f"خطا در دریافت اطلاعات پست: {e}")
         return [], ""
         
-    
         def _get_shortcode(self, url: str) -> str:
         """استخراج shortcode از URL"""
         pattern = r'(?:https?://)?(?:www\.)?instagram\.com/(?:p|reel|tv)/([^/?#&]+)'

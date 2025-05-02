@@ -290,7 +290,7 @@ class TelegramBot:
 
 def main():
     # دریافت تنظیمات از متغیرهای محیطی    
-    os.environ['TELEGRAM_TOKEN'] = "8020374587:AAEwNAMmz5hK2551gxXco10R3Ccp-RetOmI"
+    os.environ['TELEGRAM_TOKEN'] = "7630082566:AAGumCjrntnMLL-8njUbgj0kncjFTftkRBs"
     TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
     INSTA_USERNAME = os.getenv('INSTA_USERNAME')
     INSTA_PASSWORD = os.getenv('INSTA_PASSWORD')

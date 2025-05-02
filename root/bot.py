@@ -78,33 +78,36 @@ class InstagramDownloader:
             return False
 
     def download_media(self, url: str, filename: str = None) -> Optional[str]:
-        """دانلود مدیا با مدیریت بهتر خطاها"""
-        try:
-            # استفاده از session اختصاصی برای هر دانلود
-            with requests.Session() as session:
-                session.headers = self.session.headers
-                response = session.get(url, stream=True, timeout=90)
-                response.raise_for_status()
-                
-                # تعیین نام فایل
-                filename = self._generate_filename(url, filename, response)
-                
-                # ایجاد پوشه موقت
-                temp_dir = self._create_temp_dir()
-                save_path = os.path.join(temp_dir, filename)
-                
-                # دانلود با مدیریت حافظه
-                with open(save_path, 'wb') as f:
-                    for chunk in response.iter_content(chunk_size=8192):
-                        if chunk:
-                            f.write(chunk)
-                
-                logger.info(f"دانلود موفق: {save_path}")
-                return save_path
-                
-        except requests.exceptions.RequestException as e:
-            logger.error(f"خطا در دانلود مدیا: {str(e)}")
-            return None
+    """دانلود مدیا از URL"""
+    try:
+        response = self.session.get(url, headers=self.headers, stream=True, timeout=60)
+        response.raise_for_status()
+
+        if not filename:
+            filename = os.path.basename(urlparse(url).path)
+
+        filename = self.sanitize_filename(filename)
+        
+        if not os.path.splitext(filename)[1]:
+            if 'image' in response.headers.get('content-type', ''):
+                filename += '.jpg'
+            elif 'video' in response.headers.get('content-type', ''):
+                filename += '.mp4'
+
+        # ایجاد پوشه دانلود اگر وجود نداشته باشد
+        os.makedirs('downloads', exist_ok=True)
+        save_path = os.path.join('downloads', filename)
+
+        with open(save_path, 'wb') as f:
+            for chunk in response.iter_content(1024):
+                f.write(chunk)
+
+        logger.info(f"مدیا با موفقیت دانلود شد: {save_path}")
+        return save_path
+        
+    except Exception as e:
+        logger.error(f"خطا در دانلود مدیا: {e}")
+        return None
 
     def _generate_filename(self, url: str, filename: str, response) -> str:
         """تولید نام فایل ایمن"""

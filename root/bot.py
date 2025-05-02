@@ -77,7 +77,6 @@ class InstagramDownloader:
             logger.error(f"خطا در احراز دو مرحله‌ای: {str(e)}")
             return False
 
-
 def download_media(self, url: str, filename: str = None) -> Optional[str]:
     """دانلود مدیا از URL"""
     try:
@@ -95,8 +94,9 @@ def download_media(self, url: str, filename: str = None) -> Optional[str]:
             elif 'video' in response.headers.get('content-type', ''):
                 filename += '.mp4'
 
-        os.makedirs('downloads', exist_ok=True)
-        save_path = os.path.join('downloads', filename)
+        temp_dir = os.path.join(os.getcwd(), 'temp_downloads')
+        os.makedirs(temp_dir, exist_ok=True)
+        save_path = os.path.join(temp_dir, filename)
 
         with open(save_path, 'wb') as f:
             for chunk in response.iter_content(1024):
@@ -107,49 +107,6 @@ def download_media(self, url: str, filename: str = None) -> Optional[str]:
     except Exception as e:
         logger.error(f"خطا در دانلود مدیا: {e}")
         return None
-    def _generate_filename(self, url: str, filename: str, response) -> str:
-        """تولید نام فایل ایمن"""
-        if not filename:
-            filename = os.path.basename(urlparse(url).path.split('?')[0]
-        
-        filename = self.sanitize_filename(filename)
-        
-        # تعیین پسوند فایل
-        content_type = response.headers.get('content-type', '')
-        if not os.path.splitext(filename)[1]:
-            if 'image' in content_type:
-                filename += '.jpg'
-            elif 'video' in content_type:
-                filename += '.mp4'
-        
-        return filename
-
-    def _create_temp_dir(self) -> str:
-        """ایجاد پوشه موقت با مدیریت خودکار"""
-        temp_dir = os.path.join(os.getcwd(), "temp_insta_downloads")
-        os.makedirs(temp_dir, exist_ok=True)
-        return temp_dir
-
-    def sanitize_filename(self, filename: str) -> str:
-        """پاکسازی نام فایل با الگوی پیشرفته"""
-        filename = re.sub(r'[\\/*?:"<>|]', '', filename)
-        filename = re.sub(r'\s+', '_', filename)
-        return filename[:255]  # محدودیت طول نام فایل
-            # استفاده از دایرکتوری موقت سیستم
-            temp_dir = os.path.join(os.getcwd(), 'temp_downloads')
-            os.makedirs(temp_dir, exist_ok=True)
-            save_path = os.path.join(temp_dir, filename)
-
-            with open(save_path, 'wb') as f:
-                for chunk in response.iter_content(1024):
-                    f.write(chunk)
-
-            logger.info(f"مدیا با موفقیت دانلود شد: {save_path}")
-            return save_path
-        except Exception as e:
-            logger.error(f"خطا در دانلود مدیا: {e}")
-            return None
-
     def get_post_info(self, url: str) -> Tuple[List[Tuple[str, str, str]], str]:
         """دریافت اطلاعات پست"""
         try:

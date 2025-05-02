@@ -111,33 +111,32 @@ def download_media(self, url: str, filename: str = None) -> Optional[str]:
     # ... (متدهای دیگر)
 
     def get_post_info(self, url: str) -> Tuple[List[Tuple[str, str, str]], str]:
-        """دریافت اطلاعات پست اینستاگرام"""
-        try:
-            shortcode = self._get_shortcode(url)
-            post = instaloader.Post.from_shortcode(self.loader.context, shortcode)
-            
-            media_list = []
-            caption = post.caption if post.caption else ""
-            
-            if post.typename == 'GraphSidecar':
-                for idx, node in enumerate(post.get_sidecar_nodes(), start=1):
-                    media_url = node.video_url if node.is_video else node.display_url
-                    media_type = 'video' if node.is_video else 'photo'
-                    ext = '.mp4' if node.is_video else '.jpg'
-                    filename = f"{post.owner_username}_{post.shortcode}_{idx}{ext}"
-                    media_list.append((media_url, media_type, filename))
-            else:
-                media_url = post.video_url if post.is_video else post.url
-                media_type = 'video' if post.is_video else 'photo'
-                ext = '.mp4' if post.is_video else '.jpg'
-                filename = f"{post.owner_username}_{post.shortcode}{ext}"
+    """دریافت اطلاعات پست اینستاگرام"""
+    try:
+        shortcode = self._get_shortcode(url)
+        post = instaloader.Post.from_shortcode(self.loader.context, shortcode)
+        
+        media_list = []
+        caption = post.caption if post.caption else ""
+        
+        if post.typename == 'GraphSidecar':
+            for idx, node in enumerate(post.get_sidecar_nodes(), start=1):
+                media_url = node.video_url if node.is_video else node.display_url
+                media_type = 'video' if node.is_video else 'photo'
+                ext = '.mp4' if node.is_video else '.jpg'
+                filename = f"{post.owner_username}_{post.shortcode}_{idx}{ext}"
                 media_list.append((media_url, media_type, filename))
-            
-            return media_list, caption
-            
-        except Exception as e:
-            logger.error(f"خطا در دریافت اطلاعات پست: {e}")
-            return [], ""
+        else:
+            media_url = post.video_url if post.is_video else post.url
+            media_type = 'video' if post.is_video else 'photo'
+            ext = '.mp4' if post.is_video else '.jpg'
+            filename = f"{post.owner_username}_{post.shortcode}{ext}"
+            media_list.append((media_url, media_type, filename))
+        
+        return media_list, caption
+    except Exception as e:
+        logger.error(f"خطا در دریافت اطلاعات پست: {e}")
+        return [], ""
         
     
         def _get_shortcode(self, url: str) -> str:

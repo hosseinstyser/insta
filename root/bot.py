@@ -77,7 +77,8 @@ class InstagramDownloader:
             logger.error(f"خطا در احراز دو مرحله‌ای: {str(e)}")
             return False
 
-    def download_media(self, url: str, filename: str = None) -> Optional[str]:
+
+def download_media(self, url: str, filename: str = None) -> Optional[str]:
     """دانلود مدیا از URL"""
     try:
         response = self.session.get(url, headers=self.headers, stream=True, timeout=60)
@@ -94,7 +95,6 @@ class InstagramDownloader:
             elif 'video' in response.headers.get('content-type', ''):
                 filename += '.mp4'
 
-        # ایجاد پوشه دانلود اگر وجود نداشته باشد
         os.makedirs('downloads', exist_ok=True)
         save_path = os.path.join('downloads', filename)
 
@@ -104,11 +104,9 @@ class InstagramDownloader:
 
         logger.info(f"مدیا با موفقیت دانلود شد: {save_path}")
         return save_path
-        
     except Exception as e:
         logger.error(f"خطا در دانلود مدیا: {e}")
         return None
-
     def _generate_filename(self, url: str, filename: str, response) -> str:
         """تولید نام فایل ایمن"""
         if not filename:

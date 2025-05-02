@@ -24,7 +24,9 @@ class InstagramDownloader:
         self.loader = instaloader.Instaloader(
             user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
             request_timeout=60,
-            save_metadata=False,
+            sleep=True,
+            max_connection_attempts=3,
+            save_metadata=False,        
             download_comments=False,
             compress_json=False
         )

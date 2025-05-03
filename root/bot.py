@@ -107,12 +107,13 @@ def download_media(self, url: str, filename: str = None) -> Optional[str]:
     except Exception as e:
         logger.error(f"خطا در دانلود مدیا: {e}")
         return None
-    def get_post_info(self, url: str) -> Tuple[List[Tuple[str, str, str]], str]:
-        """دریافت اطلاعات پست"""
-        try:
-            shortcode = self.get_shortcode(url)
-            post = instaloader.Post.from_shortcode(self.loader.context, shortcode)
-            
+
+def get_post_info(self, url: str) -> Tuple[List[Tuple[str, str, str]], str]:  # این خط باید هم‌تراز با download_media باشد
+    """دریافت اطلاعات پست"""
+    try:
+        shortcode = self.get_shortcode(url)
+        post = instaloader.Post.from_shortcode(self.loader.context, shortcode)
+        
             media_list = []
             caption = post.caption if post.caption else ""
             

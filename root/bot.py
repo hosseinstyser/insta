@@ -38,7 +38,11 @@ class InstagramDownloader:
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
             'Accept-Language': 'en-US,en;q=0.9'
         }
-        
+            self.loader.context._session.headers.update({
+            'Accept-Language': 'en-US,en;q=0.9',
+            'X-IG-App-ID': '936619743392459',
+            'X-Requested-With': 'XMLHttpRequest'
+        })
         self.session = requests.Session()
         self.session.headers.update(self.headers)
 

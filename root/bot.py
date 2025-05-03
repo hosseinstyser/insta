@@ -280,7 +280,7 @@ class InstagramBot:
 
 def main():
         # دریافت تنظیمات    
-    TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN', '7732534464:AAG-qNiJiAEz5F2-D4Y_6fqqw753bzzFntc')
+    TELEGRAM_TOKEN = os.getenv('7732534464:AAG-qNiJiAEz5F2-D4Y_6fqqw753bzzFntc')
     TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
     INSTA_USERNAME = os.getenv('INSTA_USERNAME')
     INSTA_PASSWORD = os.getenv('INSTA_PASSWORD')
